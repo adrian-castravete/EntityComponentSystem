@@ -2,8 +2,6 @@ local lg = love.graphics
 
 local width = 360
 local height = 240
-local drawFunc = nil
-local clamp = "none"
 
 local outputWidth = 1280
 local outputHeight = 720
@@ -27,40 +25,25 @@ function viewport.draw()
 		return
 	end
 
-	if drawFunc then
-		lg.setCanvas(internalCanvas)
-		drawFunc()
-		lg.setColor(1, 1, 1)
-		lg.setCanvas()
-	end
-
 	lg.push()
 	lg.translate(offsetX, offsetY)
 	lg.scale(scale, scale)
 	lg.draw(internalCanvas, 0, 0)
 	lg.pop()
+
+	lg.setCanvas(internalCanvas)
+	lg.clear(0, 0, 0)
+	lg.setCanvas()
 end
 
 function viewport.setup(config)
 	width = config.width or width
 	height = config.height or height
-	drawFunc = config.drawFunc or drawFunc
-	local newClamp = config.clamp or clamp
 
 	viewport.resize(lg.getDimensions())
 
-	if clamp ~= newClamp then
-		local w, h = width, height
-		if newClamp == "none" then
-			w = outputWidth
-			h = outputHeight
-		elseif newClamp == "wide" then
-			w = outputWidth
-		end
-		internalCanvas = lg.newCanvas(w, h)
-		viewport.canvas = internalCanvas
-		clamp = newClamp
-	end
+	internalCanvas = lg.newCanvas(width, height)
+	viewport.canvas = internalCanvas
 end
 
 return viewport
