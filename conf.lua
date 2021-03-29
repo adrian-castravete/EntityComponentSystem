@@ -8,8 +8,8 @@ function love.conf(t)
   local w = t.window
   w.title = "Tests - fkge"
   w.icon = nil
-  w.width = 960
-  w.height = 600
+  w.width = 512
+  w.height = 384
   w.minwidth = 256
   w.minheight = 192
   w.resizable = true

@@ -34,7 +34,9 @@ local vCfg = {
 	cameraX = 0,
 	cameraY = 0,
 }
+local tick = 0
 
+local events = {}
 local components = {}
 local systems = {}
 local scenes = {}
@@ -176,13 +178,15 @@ end
 function love.update(dt)
 	lg.setCanvas(viewport.canvas)
 
+  tick = tick + 1
 	for _, e in ipairs(entities) do
 		for name, func in pairs(systems) do
 			if e.names[name] then
-				func(e, dt)
+				func(e, events['tick'..tick] or {}, dt)
 			end
 		end
 	end
+  events['tick'..tick] = nil
 
 	lg.setColor(1, 1, 1)
 	lg.setCanvas()
@@ -205,6 +209,27 @@ function fkge.game(config)
 		end
 		fkge.sprites = sprs
 	end
+end
+
+function fkge.fire(name, ...)
+  local tickName = 'tick'..(tick+1)
+  local tickEvents = events[tickName]
+  if not tickEvents then
+    tickEvents = {}
+  end
+
+  local nameEvents = tickEvents[name]
+  if not nameEvents then
+    nameEvents = {}
+  end
+  local value = {...}
+  if not value then
+    value = true
+  end
+  nameEvents[#nameEvents+1] = value
+  tickEvents[name] = nameEvents
+
+  events[tickName] = tickEvents
 end
 
 return fkge
