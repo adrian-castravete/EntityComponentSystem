@@ -1,5 +1,6 @@
 local cpath = ...
 local log = require(cpath..".log")
+log.level = 'info'
 local spritesheet = require(cpath..".spritesheet")
 local viewport = require(cpath..".viewport")
 
@@ -178,15 +179,16 @@ end
 function love.update(dt)
 	lg.setCanvas(viewport.canvas)
 
-  tick = tick + 1
+	tick = tick + 1
 	for _, e in ipairs(entities) do
 		for name, func in pairs(systems) do
 			if e.names[name] then
-				func(e, events['tick'..tick] or {}, dt)
+				local eevents = events['tick'..tick] or {}
+				func(e, eevents[name] or {}, dt)
 			end
 		end
 	end
-  events['tick'..tick] = nil
+	events['tick'..tick] = nil
 
 	lg.setColor(1, 1, 1)
 	lg.setCanvas()
@@ -201,6 +203,10 @@ function fkge.game(config)
 	vCfg = tableSelect(config, {"width", "height"})
 	viewport.setup(vCfg)
 
+	if config.logLevel then
+		log.level = config.logLevel
+	end
+
 	local tCfg = config.sprites or nil
 	if tCfg then
 		local sprs = {}
@@ -211,25 +217,29 @@ function fkge.game(config)
 	end
 end
 
-function fkge.fire(name, ...)
-  local tickName = 'tick'..(tick+1)
-  local tickEvents = events[tickName]
-  if not tickEvents then
-    tickEvents = {}
-  end
+function fkge.fire(ename, name, ...)
+	local tickName = 'tick'..(tick+1)
+	local tickEvents = events[tickName]
+	if not tickEvents then
+		tickEvents = {}
+	end
 
-  local nameEvents = tickEvents[name]
-  if not nameEvents then
-    nameEvents = {}
-  end
-  local value = {...}
-  if not value then
-    value = true
-  end
-  nameEvents[#nameEvents+1] = value
-  tickEvents[name] = nameEvents
-
-  events[tickName] = tickEvents
+	local nameEvents = tickEvents[ename]
+	if not nameEvents then
+		nameEvents = {}
+	end
+	if not nameEvents[name] then
+		nameEvents[name] = {}
+	end
+	local nameEventsList = nameEvents[name]
+	local value = {...}
+	if not value then
+		value = true
+	end
+	nameEventsList[#nameEventsList+1] = value
+	nameEvents[name] = nameEventsList
+	tickEvents[ename] = nameEvents
+	events[tickName] = tickEvents
 end
 
 return fkge
