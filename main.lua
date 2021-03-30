@@ -24,6 +24,21 @@ fkge.c('ship', "draw, input", {
 	h = 16,
 })
 
+fkge.s('ship', function (e)
+	if e.pressedLeft then
+		e.x = e.x - 2
+	end
+	if e.pressedRight then
+		e.x = e.x + 2
+	end
+	if e.x > 240 then
+		e.x = 240
+	end
+	if e.x < 16 then
+		e.x = 16
+	end
+end)
+
 fkge.c('alien', "draw")
 
 fkge.s('alien', function (e)
@@ -36,18 +51,18 @@ fkge.s('alien', function (e)
 end)
 
 local function newAlien(name, w, h, c)
-  fkge.c(name, "alien", {
-    w = w,
-    h = h,
-    color = c,
-  })
-  fkge.s(name, function (e, evt, dt)
-    if evt['move-right'] then
-      e.x = e.x + 2
-    elseif evt['move-left'] then
-      e.x = e.x - 2
-    end
-  end)
+	fkge.c(name, "alien", {
+		w = w,
+		h = h,
+		color = c,
+	})
+	fkge.s(name, function (e, evt, dt)
+		if evt['move-right'] then
+			e.x = e.x + 2
+		elseif evt['move-left'] then
+			e.x = e.x - 2
+		end
+	end)
 end
 
 newAlien('alien1', 12, 12, {1, 0, 0})
@@ -101,8 +116,10 @@ end)
 fkge.s('input', function (e, evt)
 	if evt.keypressed then
 		for _, k in ipairs(evt.keypressed) do
-			if k == 'space' then
-				print("Pew!")
+			if k == 'left' then
+				e.pressedLeft = true
+			elseif k == 'right' then
+				e.pressedRight = true
 			end
 		end
 	end
@@ -110,6 +127,10 @@ fkge.s('input', function (e, evt)
 		for _, k in ipairs(evt.keyreleased) do
 			if k == 'escape' then
 				fkge.stop()
+			elseif k == 'left' then
+				e.pressedLeft = false
+			elseif k == 'right' then
+				e.pressedRight = false
 			end
 		end
 	end
@@ -125,10 +146,10 @@ fkge.scene('game', function()
 		end
 	end
 	fkge.e('alien-walker')
-  fkge.e('ship').attr {
-    x = 128,
-    y = 176,
-  }
+	fkge.e('ship').attr {
+		x = 128,
+		y = 176,
+	}
 end)
 
 fkge.scene'game'

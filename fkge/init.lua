@@ -230,7 +230,7 @@ function fkge.game(config)
 	end
 end
 
-function fkge.fire(ename, name, data) 
+function fkge.fire(ename, name, data)
 	local tickName = 'tick'..(tick+1)
 	local tickEvents = events[tickName]
 	if not tickEvents then
