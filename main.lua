@@ -19,43 +19,49 @@ fkge.c('color', {
 
 fkge.c('draw', "2d, color")
 
-fkge.c('ship', "draw", {
+fkge.c('ship', "draw, input", {
 	w = 16,
 	h = 16,
 })
 
-fkge.c('alien', "draw", {
-})
+fkge.c('alien', "draw")
 
-fkge.c('alien1', "alien", {
-	w = 12,
-	h = 12,
-	color = {1, 0, 0},
-})
+fkge.s('alien', function (e)
+	if e.x > 240 then
+		fkge.fire('alien-walker', 'turn-left')
+	end
+	if e.x < 16 then
+		fkge.fire('alien-walker', 'turn-right')
+	end
+end)
 
-fkge.c('alien2', "alien", {
-	w = 14,
-	h = 14,
-	color = {1, 5/7, 0},
-})
+local function newAlien(name, w, h, c)
+  fkge.c(name, "alien", {
+    w = w,
+    h = h,
+    color = c,
+  })
+  fkge.s(name, function (e, evt, dt)
+    if evt['move-right'] then
+      e.x = e.x + 2
+    elseif evt['move-left'] then
+      e.x = e.x - 2
+    end
+  end)
+end
 
-fkge.c('alien3', "alien", {
-	w = 14,
-	h = 14,
-	color = {2/7, 5/7, 0},
-})
+newAlien('alien1', 12, 12, {1, 0, 0})
+newAlien('alien2', 14, 14, {1, 5/7, 0})
+newAlien('alien3', 14, 14, {2/7, 5/7, 0})
+newAlien('alien4', 16, 15, {0, 5/7, 1})
+newAlien('alien5', 16, 16, {5/7, 0, 1})
 
-fkge.c('alien4', "alien", {
-	w = 16,
-	h = 15,
-	color = {0, 5/7, 1},
-})
-
-fkge.c('alien5', "alien", {
-	w = 16,
-	h = 15,
-	color = {5/7, 0, 1},
-})
+fkge.s('draw', function (e)
+	lg.push()
+	lg.setColor(e.color)
+	lg.rectangle('fill', e.x - e.w/2, e.y - e.h/2, e.w, e.h)
+	lg.pop()
+end)
 
 fkge.c('alien-walker', {
 	walkRow = 5,
@@ -64,13 +70,6 @@ fkge.c('alien-walker', {
 	speed = 30,
 	tick = 0,
 })
-
-fkge.s('draw', function (e)
-	lg.push()
-	lg.setColor(e.color)
-	lg.rectangle('fill', e.x - e.w/2, e.y - e.h/2, e.w, e.h)
-	lg.pop()
-end)
 
 fkge.s('alien-walker', function (e, evt)
 	if evt['turn-right'] then
@@ -99,52 +98,20 @@ fkge.s('alien-walker', function (e, evt)
 	end
 end)
 
-fkge.s('alien', function (e)
-	if e.x > 240 then
-		fkge.fire('alien-walker', 'turn-left')
+fkge.s('input', function (e, evt)
+	if evt.keypressed then
+		for _, k in ipairs(evt.keypressed) do
+			if k == 'space' then
+				print("Pew!")
+			end
+		end
 	end
-	if e.x < 16 then
-		fkge.fire('alien-walker', 'turn-right')
-	end
-end)
-
-fkge.s('alien1', function (e, evt, dt)
-	if evt['move-right'] then
-		e.x = e.x + 2
-	elseif evt['move-left'] then
-		e.x = e.x - 2
-	end
-end)
-
-fkge.s('alien2', function (e, evt)
-	if evt['move-right'] then
-		e.x = e.x + 2
-	elseif evt['move-left'] then
-		e.x = e.x - 2
-	end
-end)
-
-fkge.s('alien3', function (e, evt)
-	if evt['move-right'] then
-		e.x = e.x + 2
-	elseif evt['move-left'] then
-		e.x = e.x - 2
-	end
-end)
-
-fkge.s('alien4', function (e, evt)
-	if evt['move-right'] then
-		e.x = e.x + 2
-	elseif evt['move-left'] then
-		e.x = e.x - 2
-	end
-end)
-
-fkge.s('alien5', function (e, evt)
-	if evt['move-right'] then
-		e.x = e.x + 2
-	elseif evt['move-left'] then
-		e.x = e.x - 2
+	if evt.keyreleased then
+		for _, k in ipairs(evt.keyreleased) do
+			if k == 'escape' then
+				fkge.stop()
+			end
+		end
 	end
 end)
 
@@ -158,6 +125,10 @@ fkge.scene('game', function()
 		end
 	end
 	fkge.e('alien-walker')
+  fkge.e('ship').attr {
+    x = 128,
+    y = 176,
+  }
 end)
 
 fkge.scene'game'

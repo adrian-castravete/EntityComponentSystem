@@ -79,6 +79,9 @@ local function Component(name, parents, data, toDelete)
 		if parents then
 			for parent in string.gmatch(parents, '[^,%s*]+') do
 				local pcomp = Component(parent)
+				if not pcomp then
+					pcomp = Component(parent, {})
+				end
 				local pnames = pcomp.names
 				tableUpdate(comp, pcomp)
 				for _, pname in ipairs(pnames) do
@@ -96,9 +99,6 @@ local function Component(name, parents, data, toDelete)
 		log.debug("Defined component '"..name.."'")
 	else
 		comp = components[name]
-		if not comp then
-			log.warn("Component '"..name.."' does not exist.")
-		end
 	end
 
 	return comp
@@ -135,6 +135,11 @@ local function Entity(name)
 	local names = {}
 	for cname in string.gmatch(name, '[^,%s*]+') do
 		local pcomp = Component(cname)
+		if not pcomp then
+			message = "Component '"..cname.."' does not exist."
+			log.error(message)
+			error(message, 2)
+		end
 		for _, pname in ipairs(pcomp.names) do
 			names[pname] = true
 		end
@@ -198,6 +203,14 @@ function love.resize(w, h)
 	viewport.resize(w, h)
 end
 
+function love.keypressed(key)
+	fkge.fire('input', 'keypressed', key)
+end
+
+function love.keyreleased(key)
+	fkge.fire('input', 'keyreleased', key)
+end
+
 function fkge.game(config)
 	lg.setDefaultFilter('nearest', 'nearest')
 	vCfg = tableSelect(config, {"width", "height"})
@@ -217,7 +230,7 @@ function fkge.game(config)
 	end
 end
 
-function fkge.fire(ename, name, ...)
+function fkge.fire(ename, name, data) 
 	local tickName = 'tick'..(tick+1)
 	local tickEvents = events[tickName]
 	if not tickEvents then
@@ -232,14 +245,17 @@ function fkge.fire(ename, name, ...)
 		nameEvents[name] = {}
 	end
 	local nameEventsList = nameEvents[name]
-	local value = {...}
-	if not value then
-		value = true
+	if not data then
+		data = true
 	end
-	nameEventsList[#nameEventsList+1] = value
+	nameEventsList[#nameEventsList+1] = data
 	nameEvents[name] = nameEventsList
 	tickEvents[ename] = nameEvents
 	events[tickName] = tickEvents
+end
+
+function fkge.stop()
+	love.event.quit()
 end
 
 return fkge
