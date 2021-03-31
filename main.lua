@@ -22,9 +22,13 @@ fkge.c('draw', "2d, color")
 fkge.c('ship', "draw, input", {
 	w = 16,
 	h = 16,
+	pressedLeft = false,
+	pressedRight = false,
+	pressedFire = false,
+	fireDelta = 0,
 })
 
-fkge.s('ship', function (e)
+fkge.s('ship', function (e, _, dt)
 	if e.pressedLeft then
 		e.x = e.x - 2
 	end
@@ -36,6 +40,15 @@ fkge.s('ship', function (e)
 	end
 	if e.x < 16 then
 		e.x = 16
+	end
+	if e.pressedFire and e.fireDelta <= 0 then
+		fkge.e('bullet').attr {x = e.x, y = e.y}
+		e.fireDelta = 0.4
+	end
+	if e.fireDelta > 0 then
+		e.fireDelta = e.fireDelta - dt
+	else
+		e.fireDelta = 0
 	end
 end)
 
@@ -120,6 +133,8 @@ fkge.s('input', function (e, evt)
 				e.pressedLeft = true
 			elseif k == 'right' then
 				e.pressedRight = true
+			elseif k == 'space' then
+				e.pressedFire = true
 			end
 		end
 	end
@@ -131,12 +146,24 @@ fkge.s('input', function (e, evt)
 				e.pressedLeft = false
 			elseif k == 'right' then
 				e.pressedRight = false
+			elseif k == 'space' then
+				e.pressedFire = false
 			end
 		end
 	end
 end)
 
-fkge.scene('game', function()
+fkge.c('bullet', 'draw', {
+	w = 4,
+	h = 8,
+	color = {1, 1, 1},
+})
+
+fkge.s('bullet', function (e, evt)
+	e.y = e.y - 4
+end)
+
+fkge.scene('game', function ()
 	for j=1, 5 do
 		for i=1, 8 do
 			fkge.e('alien'..j).attr {
