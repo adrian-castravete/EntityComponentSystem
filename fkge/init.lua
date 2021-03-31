@@ -185,6 +185,7 @@ function love.update(dt)
 	lg.setCanvas(viewport.canvas)
 
 	tick = tick + 1
+	local newEntities = {}
 	for _, e in ipairs(entities) do
 		for name, func in pairs(systems) do
 			if e.names[name] then
@@ -192,6 +193,13 @@ function love.update(dt)
 				func(e, eevents[name] or {}, dt)
 			end
 		end
+		if not e.destroy then
+			newEntities[#newEntities + 1] = e
+		end
+	end
+	entities = newEntities
+	if currentScene then
+		currentScene.entities = entities
 	end
 	events['tick'..tick] = nil
 

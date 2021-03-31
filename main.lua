@@ -153,7 +153,7 @@ fkge.s('input', function (e, evt)
 	end
 end)
 
-fkge.c('bullet', 'draw', {
+fkge.c('bullet', "draw", {
 	w = 4,
 	h = 8,
 	color = {1, 1, 1},
@@ -161,6 +161,9 @@ fkge.c('bullet', 'draw', {
 
 fkge.s('bullet', function (e, evt)
 	e.y = e.y - 4
+	if e.y < 0 then
+		e.destroy = true
+	end
 end)
 
 fkge.scene('game', function ()
