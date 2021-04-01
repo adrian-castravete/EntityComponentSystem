@@ -219,6 +219,18 @@ function love.keyreleased(key)
 	fkge.fire('input', 'keyreleased', key)
 end
 
+function love.joystickpressed(joy, button)
+	fkge.fire('input', 'joystickpressed', {joy, button})
+end
+
+function love.joystickreleased(joy, button)
+	fkge.fire('input', 'joystickreleased', {joy, button})
+end
+
+function love.joystickaxis(joy, axis, value)
+	fkge.fire('input', 'joystickaxis', {joy, axis, value})
+end
+
 function fkge.game(config)
 	lg.setDefaultFilter('nearest', 'nearest')
 	vCfg = tableSelect(config, {"width", "height"})
@@ -260,6 +272,14 @@ function fkge.fire(ename, name, data)
 	nameEvents[name] = nameEventsList
 	tickEvents[ename] = nameEvents
 	events[tickName] = tickEvents
+end
+
+function fkge.each(name, func)
+	for _, e in ipairs(entities) do
+		if e.names[name] then
+			func(e)
+		end
+	end
 end
 
 function fkge.stop()

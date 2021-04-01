@@ -25,14 +25,15 @@ fkge.c('ship', "draw, input", {
 	pressedLeft = false,
 	pressedRight = false,
 	pressedFire = false,
+	joy = 'center',
 	fireDelta = 0,
 })
 
 fkge.s('ship', function (e, _, dt)
-	if e.pressedLeft then
+	if e.pressedLeft or e.joy == 'left' then
 		e.x = e.x - 2
 	end
-	if e.pressedRight then
+	if e.pressedRight or e.joy == 'right' then
 		e.x = e.x + 2
 	end
 	if e.x > 240 then
@@ -54,12 +55,25 @@ end)
 
 fkge.c('alien', "draw")
 
-fkge.s('alien', function (e)
+fkge.s('alien', function (e, evt)
 	if e.x > 240 then
-		fkge.fire('alien-walker', 'turn-left')
+		fkge.fire('alien-walker', 'turn_left')
 	end
 	if e.x < 16 then
-		fkge.fire('alien-walker', 'turn-right')
+		fkge.fire('alien-walker', 'turn_right')
+	end
+	local bullets = evt.bullet_launched
+	if bullets then
+		for _, b in ipairs(bullets) do
+			local dx = math.abs(b.x - e.x)
+			local dy = math.abs(b.y - e.y)
+			local dw = math.abs(b.w - e.w)
+			local dh = math.abs(b.h - e.h)
+			if dx + dy <= (dw + dh) / 2 then
+				e.destroy = true
+				b.destroy = true
+			end
+		end
 	end
 end)
 
@@ -70,9 +84,9 @@ local function newAlien(name, w, h, c)
 		color = c,
 	})
 	fkge.s(name, function (e, evt, dt)
-		if evt['move-right'] then
+		if evt.move_right then
 			e.x = e.x + 2
-		elseif evt['move-left'] then
+		elseif evt.move_left then
 			e.x = e.x - 2
 		end
 	end)
@@ -100,9 +114,9 @@ fkge.c('alien-walker', {
 })
 
 fkge.s('alien-walker', function (e, evt)
-	if evt['turn-right'] then
+	if evt.turn_right then
 		e.nextHeadingRight = true
-	elseif evt['turn-left'] then
+	elseif evt.turn_left then
 		e.nextHeadingRight = false
 	end
 
@@ -112,9 +126,9 @@ fkge.s('alien-walker', function (e, evt)
 	end
 
 	if e.headingRight then
-		fkge.fire('alien'..e.walkRow, 'move-right')
+		fkge.fire('alien'..e.walkRow, 'move_right')
 	else
-		fkge.fire('alien'..e.walkRow, 'move-left')
+		fkge.fire('alien'..e.walkRow, 'move_left')
 	end
 	e.walkRow = e.walkRow - 1
 	if e.walkRow < 1 then
@@ -127,28 +141,45 @@ fkge.s('alien-walker', function (e, evt)
 end)
 
 fkge.s('input', function (e, evt)
-	if evt.keypressed then
-		for _, k in ipairs(evt.keypressed) do
-			if k == 'left' then
-				e.pressedLeft = true
-			elseif k == 'right' then
-				e.pressedRight = true
-			elseif k == 'space' then
-				e.pressedFire = true
+	for _, k in ipairs(evt.keypressed or {}) do
+		if k == 'left' then
+			e.pressedLeft = true
+		elseif k == 'right' then
+			e.pressedRight = true
+		elseif k == 'space' then
+			e.pressedFire = true
+		end
+	end
+	for _, k in ipairs(evt.keyreleased or {}) do
+		if k == 'escape' then
+			fkge.stop()
+		elseif k == 'left' then
+			e.pressedLeft = false
+		elseif k == 'right' then
+			e.pressedRight = false
+		elseif k == 'space' then
+			e.pressedFire = false
+		end
+	end
+	for _, j in ipairs(evt.joystickaxis or {}) do
+		if j[2] == 1 then
+			if j[3] < -0.5 then
+				e.joy = 'left'
+			elseif j[3] > 0.5 then
+				e.joy = 'right'
+			else
+				e.joy = 'center'
 			end
 		end
 	end
-	if evt.keyreleased then
-		for _, k in ipairs(evt.keyreleased) do
-			if k == 'escape' then
-				fkge.stop()
-			elseif k == 'left' then
-				e.pressedLeft = false
-			elseif k == 'right' then
-				e.pressedRight = false
-			elseif k == 'space' then
-				e.pressedFire = false
-			end
+	for _, j in ipairs(evt.joystickpressed or {}) do
+		if j[2] >= 1 and j[2] <= 4 then
+			e.pressedFire = true
+		end
+	end
+	for _, j in ipairs(evt.joystickreleased or {}) do
+		if j[2] >= 1 and j[2] <= 4 then
+			e.pressedFire = false
 		end
 	end
 end)
@@ -163,6 +194,8 @@ fkge.s('bullet', function (e, evt)
 	e.y = e.y - 4
 	if e.y < 0 then
 		e.destroy = true
+	else
+		fkge.fire('alien', 'bullet_launched', e)
 	end
 end)
 
